@@ -1,10 +1,11 @@
 <template>
   <v-app-bar
+      scroll-behavior="hide"
       :elevation="0"
       color="rgba(20, 20, 20, 1)"
-      :height="200"
-      scroll-behavior="hide">
+      :height="200">
       <v-img
+          @click="$router.push({ name: 'Home' })"
           class="logo"
           :width="400"
           aspect-ratio="1/1"
@@ -13,6 +14,7 @@
   </v-app-bar>
 
   <v-app-bar
+      scroll-behavior="elevate"
       :elevation="2"
       color="rgba(26, 26, 26, 1)">
     <template v-if="!!isAuthenticated" v-slot:prepend>

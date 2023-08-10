@@ -155,13 +155,13 @@ export default {
 
 <style scoped>
 .custom-position {
-  margin-top: 400px;
+  margin-top: 50px;
   left: 28%;
 }
 
 .custom-2-position {
   position: absolute;
-  margin-top: 600px;
+  margin-top: 250px;
   left: 8%;
 }
 </style>

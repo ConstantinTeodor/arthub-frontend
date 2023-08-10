@@ -1,8 +1,10 @@
 <template>
-  <div class="background">
+  <v-app class="background">
     <TopNavigationBar/>
-    <RegisterForm/>
-  </div>
+    <v-main>
+      <RegisterForm/>
+    </v-main>
+  </v-app>
 </template>
 
 <script>
