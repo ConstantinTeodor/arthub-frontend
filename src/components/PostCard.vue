@@ -16,6 +16,23 @@
 
       <v-list-item-title> {{ postData.data.username }} </v-list-item-title>
       <v-list-item-subtitle> {{ postData.data.posted_at }} </v-list-item-subtitle>
+
+      <template v-slot:append>
+        <v-menu v-if="postData.data.myPost">
+          <template v-slot:activator="{ props }">
+            <v-btn icon="mdi-dots-vertical" v-bind="props"></v-btn>
+          </template>
+
+          <v-list>
+            <v-list-item
+                v-for="(item, i) in items"
+                :key="i"
+            >
+              <v-list-item-title>{{ item.title }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </template>
     </v-list-item>
 
     <v-card-text :style="{ fontSize: '18px' }">
@@ -94,9 +111,11 @@
                     <v-btn icon="mdi-close" @click="overlay = !overlay">
                     </v-btn>
                   </template>
-                  <div v-for="comment in postData.data.comments" :key="comment.id">
-                    <comment-section :commentData="comment"></comment-section>
-                  </div>
+                  <v-container class="overflow-y-scroll" :style="{ height: '680px' }">
+                    <div v-for="comment in postData.data.comments" :key="comment.id">
+                      <comment-section :commentData="comment" @refreshPage="handleRefresh"></comment-section>
+                    </div>
+                  </v-container>
                   <v-container class="position-absolute bottom-0">
                     <v-divider></v-divider>
                     <v-textarea
@@ -139,6 +158,12 @@ export default {
       overlay: false,
       commentData: '',
       iLiked: false,
+      items: [
+        { title: 'Click Me' },
+        { title: 'Click Me' },
+        { title: 'Click Me' },
+        { title: 'Click Me 2' },
+      ],
     };
   },
   computed: {
@@ -236,7 +261,10 @@ export default {
       } catch (error) {
         console.error('Error fetching image:', error);
       }
-    }
+    },
+    handleRefresh() {
+      this.fetchData();
+    },
   },
 }
 </script>

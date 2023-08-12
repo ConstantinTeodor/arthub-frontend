@@ -4,9 +4,34 @@
       theme="dark"
   >
 
-    <v-card-text :style="{ fontSize: '18px' }">
+    <v-card-text v-if="!editEnabled" :style="{ fontSize: '18px' }">
       {{ commentData.comment }}
     </v-card-text>
+
+    <v-card-text v-else>
+      <v-text-field
+          v-model="newComment"
+          :append-icon="'mdi-send'"
+          :clearable="true"
+          label="Edit comment"
+          @keydown.enter="edit"
+          @click:append="edit">
+      </v-text-field>
+    </v-card-text>
+
+    <v-alert
+        v-if="deleteMessage"
+        type="warning"
+        :prominent="true"
+        border="top"
+        variant="outlined"
+    >
+      Are you sure you want to delete this comment?
+      <template v-slot:append>
+        <v-icon class="mt-2" @click="deleteComment">mdi-check</v-icon>
+        <v-icon class="mt-2 ml-2" @click="deleteMessage = !deleteMessage">mdi-close</v-icon>
+      </template>
+    </v-alert>
 
     <v-card-actions>
       <v-list-item class="w-100">
@@ -23,8 +48,11 @@
 
         <template v-slot:append>
           <div class="justify-self-end">
-            <v-icon class="me-1" icon="mdi-heart"></v-icon>
-            <span class="subheading me-2">256</span>
+            <v-icon v-if="commentData.myComment" @click="deleteMessage = !deleteMessage" class="me-1" color="white" icon="mdi-delete"></v-icon>
+            <v-icon v-if="commentData.myComment" @click="editEnabled = !editEnabled" class="me-1" color="white" icon="mdi-pencil"></v-icon>
+            <v-icon v-if="iLiked" @click="like" class="me-1" color="pink" icon="mdi-heart"></v-icon>
+            <v-icon v-else @click="like" class="me-1" icon="mdi-heart-outline"></v-icon>
+            <span class="subheading me-2"> {{ commentData.likes }} </span>
           </div>
         </template>
       </v-list-item>
@@ -33,6 +61,13 @@
 </template>
 
 <script>
+import axios from "axios";
+import { mapGetters } from 'vuex';
+
+axios.defaults.baseURL = 'http://127.0.0.1:8000';
+axios.defaults.headers.common = {
+  'X-Requested-With': 'XMLHttpRequest',
+};
 export default {
   name: "CommentSection",
   props: {
@@ -41,6 +76,92 @@ export default {
       required: false,
     },
   },
+  data() {
+    return {
+      iLiked: false,
+      editEnabled: false,
+      deleteMessage: false,
+      newComment: '',
+    }
+  },
+  computed: {
+    ...mapGetters(['isAuthenticated']),
+  },
+  mounted() {
+    this.liked();
+    this.newComment = this.commentData.comment;
+  },
+  methods: {
+    async like() {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        await axios.post('/posts/comment/like', {
+          'comment_id': this.commentData.id,
+        }, {
+          headers: {
+            'Authorization': 'Bearer ' + this.isAuthenticated
+          },
+        });
+
+        this.iLiked = !this.iLiked;
+        this.$emit('refreshPage');
+      } catch (error) {
+        console.error('Error liking post:', error);
+      }
+    },
+    async liked() {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        const response = await axios.get(`/posts/comment/liked/` + this.commentData.id, {
+          headers: {
+            'Authorization': 'Bearer ' + this.isAuthenticated
+          },
+        });
+        this.iLiked = response.data.likedComment;
+      } catch (error) {
+        console.error('Error fetching image:', error);
+      }
+    },
+    async edit() {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        await axios.post('/posts/comment/edit', {
+          'comment_id': this.commentData.id,
+          'comment': this.newComment,
+        }, {
+          headers: {
+            'Authorization': 'Bearer ' + this.isAuthenticated
+          },
+        });
+
+        this.editEnabled = !this.editEnabled;
+        this.$emit('refreshPage');
+      } catch (error) {
+        console.error('Error liking post:', error);
+      }
+    },
+    async deleteComment() {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        await axios.delete(`/posts/comment/` + this.commentData.id, {
+          headers: {
+            'Authorization': 'Bearer ' + this.isAuthenticated
+          },
+        });
+        this.$emit('refreshPage');
+      } catch (error) {
+        console.error('Error fetching image:', error);
+      }
+    }
+  }
 }
 </script>
 
