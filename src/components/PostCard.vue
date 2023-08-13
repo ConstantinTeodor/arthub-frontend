@@ -24,11 +24,8 @@
           </template>
 
           <v-list>
-            <v-list-item
-                v-for="(item, i) in items"
-                :key="i"
-            >
-              <v-list-item-title>{{ item.title }}</v-list-item-title>
+            <v-list-item>
+              <v-list-item-title @click="redirectEdit">Edit</v-list-item-title>
             </v-list-item>
           </v-list>
         </v-menu>
@@ -40,6 +37,7 @@
     </v-card-text>
 
     <v-chip
+        v-if="postData.data.sale !== null"
         class="ml-4 mr-2"
         color="pink"
         :label="true"
@@ -50,6 +48,7 @@
     </v-chip>
 
     <v-chip
+        v-if="postData.data.auction !== null"
         class="ml-2"
         color="orange"
         :label="true"
@@ -158,12 +157,6 @@ export default {
       overlay: false,
       commentData: '',
       iLiked: false,
-      items: [
-        { title: 'Click Me' },
-        { title: 'Click Me' },
-        { title: 'Click Me' },
-        { title: 'Click Me 2' },
-      ],
     };
   },
   computed: {
@@ -264,6 +257,9 @@ export default {
     },
     handleRefresh() {
       this.fetchData();
+    },
+    redirectEdit() {
+      this.$router.push('/editPost/2');
     },
   },
 }

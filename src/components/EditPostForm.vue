@@ -236,7 +236,7 @@
 
     <v-card-actions>
       <v-btn @click="previousStep">Previous step</v-btn>
-      <v-btn @click="post">Post it</v-btn>
+      <v-btn @click="update">Update it</v-btn>
     </v-card-actions>
 
   </v-card>
@@ -271,7 +271,12 @@ axios.defaults.headers.common = {
   'X-Requested-With': 'XMLHttpRequest',
 };
 export default {
-  name: "AddPostForm",
+  name: "EditPostForm",
+  props: {
+    postId: {
+      required: true
+    }
+  },
   components: { VueDatePicker, SummaryStepPreview },
   data () {
     return {
@@ -289,12 +294,12 @@ export default {
       description: null,
       saleCheckbox: false,
       auctionCheckbox: false,
-      posting: false,
+      updating: false,
       artworkId: null,
       types: [],
       genres: [],
-      type: null,
-      genre: null,
+      type: [],
+      genre: [],
       errors: null,
       price: null,
       quantity: null,
@@ -304,9 +309,15 @@ export default {
       endDate: null,
       rawEndDate: null,
       startBid: null,
+      postData: null,
+      postImage: null,
+      saleId: null,
+      auctionId: null,
     }
   },
   mounted() {
+    this.fetchData();
+    this.fetchImage();
     this.getTypes();
     this.getGenres();
   },
@@ -376,6 +387,69 @@ export default {
     }
   },
   methods: {
+    async fetchData() {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        const response = await axios.get('/posts/' + this.postId, {
+          headers: {
+            'Authorization': 'Bearer ' + this.isAuthenticated
+          },
+        });
+
+        this.postData = response.data;
+
+        this.title = this.postData.data.artwork_title;
+        this.artist = this.postData.data.artwork_artist;
+        this.description = this.postData.data.description;
+        this.postData.data.types.forEach(type => {
+          this.type.push(type[0]);
+        });
+
+        this.postData.data.genres.forEach(genre => {
+          this.genre.push(genre[0]);
+        });
+
+        if (this.postData.data.sale === null) {
+          this.saleCheckbox = false;
+        } else {
+          this.saleCheckbox = true;
+          this.price = this.postData.data.sale.price;
+          this.quantity = this.postData.data.sale.quantity;
+        }
+
+        if (this.postData.data.auction === null) {
+          this.auctionCheckbox = false;
+        } else {
+          this.auctionCheckbox = true;
+          this.name = this.postData.data.auction.name;
+          this.startDate = this.postData.data.auction.start_date;
+          this.endDate = this.postData.data.auction.end_date;
+          this.startBid = this.postData.data.auction.start_bid;
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    },
+    async fetchImage() {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        const response = await axios.get('/artworks/images/' + this.postId, {
+          responseType: 'arraybuffer',
+          headers: {
+            'Authorization': 'Bearer ' + this.isAuthenticated
+          },
+        });
+        const blob = new Blob([response.data], { type: response.headers['content-type'] });
+        this.postImage = URL.createObjectURL(blob);
+        this.imageUrl = this.postImage;
+      } catch (error) {
+        console.error('Error fetching image:', error);
+      }
+    },
     nextStep () {
       if (this.step === 1) {
         if (this.title && this.artist && this.type && this.genre) {
@@ -388,12 +462,7 @@ export default {
       }
 
       if (this.step === 2) {
-        if (this.filename) {
-          this.step += 1;
-          this.errors = null;
-        } else {
-          this.errors = 'Please upload an image';
-        }
+        this.step += 1;
         return;
       }
 
@@ -513,80 +582,85 @@ export default {
         }
       }
     },
-    async post() {
+    async update() {
       try {
-        this.posting = true;
-
-        const response = await axios.post('/artworks/', {
-          title: this.title,
-          artist: this.artist,
-          type: this.type,
-          genre: this.genre,
+        this.updating = true;
+        console.log(this.postData.data);
+        this.handleSale();
+        this.handleAuction();
+        await axios.put('/posts', {
+          post_id: this.postId,
+          title: this.postData.data.title === this.title ? null : this.title,
+          artist: this.postData.data.artist === this.artist ? null : this.artist,
+          type: this.postData.data.type === this.type ? null : this.type,
+          genre: this.postData.data.genre === this.genre ? null : this.genre,
+          image_url: this.filename === null ? null : this.filename,
+          description: this.postData.data.description === this.description ? null : this.description,
+          sale_id: this.saleId,
+          price: this.postData.data.price === this.price ? null : this.price,
+          quantity: this.postData.data.quantity === this.quantity ? null : this.quantity,
+          auction_id: this.auctionId,
+          start_bid: this.postData.data.start_bid === this.startBid ? null : this.startBid,
+          start_date: this.postData.data.start_date === this.startDate ? null : this.startDate,
+          end_date: this.postData.data.end_date === this.endDate ? null : this.endDate,
+          name: this.postData.data.name === this.name ? null : this.name,
         }, {
           headers: {
             'Authorization': 'Bearer ' + this.isAuthenticated
           },
         });
-
-        if (response.status === 200) {
-          this.artworkId = response.data.id;
-        }
-
-        const responsePost = await axios.post('/posts/', {
-          artwork_id: this.artworkId,
-          description: this.description,
-          image_url: this.filename
-        }, {
-          headers: {
-            'Authorization': 'Bearer ' + this.isAuthenticated
-          },
-        });
-
-        if (responsePost.status === 200) {
-          console.log('Success');
-        }
-
-        console.log(this.auctionCheckbox)
-        console.log(this.saleCheckbox)
-
-        if (this.auctionCheckbox) {
-          const responseAuction = await axios.post('/auctions', {
-            artwork_id: this.artworkId,
-            name: this.name,
-            start_date: this.startDate,
-            end_date: this.endDate,
-            start_bid: this.startBid,
-          }, {
-            headers: {
-              'Authorization': 'Bearer ' + this.isAuthenticated
-            },
-          });
-
-          if (responseAuction.status === 200) {
-            console.log('Success');
-          }
-        }
-        if (this.saleCheckbox) {
-          const responseSale = await axios.post('/sales', {
-            artwork_id: this.artworkId,
-            price: this.price,
-            quantity: this.quantity,
-          }, {
-            headers: {
-              'Authorization': 'Bearer ' + this.isAuthenticated
-            },
-          });
-
-          if (responseSale.status === 200) {
-            console.log('Success');
-          }
-        }
       } catch (error) {
-        this.posting = false;
+        this.updating = false;
         console.error(error);
       } finally {
-        this.posting = false;
-        this.$router.push({ name: 'Home' });
+        this.updating = false;
+        // this.$router.push({ name: 'Home' });
+      }
+    },
+    handleSale() {
+      if (this.saleCheckbox) {
+        if (this.postData.data.sale !== null) {
+          if (this.postData.data.sale.id !== null) {
+            this.saleId = this.postData.data.sale.id;
+          } else {
+            this.saleId = 0;
+          }
+        } else {
+          this.saleId = 0;
+        }
+      } else {
+        if (this.postData.data.sale !== null) {
+          if (this.postData.data.sale.id !== null) {
+            this.saleId = -1;
+          } else {
+            this.saleId = -1;
+          }
+        } else {
+          this.saleId = null;
+        }
+      }
+    },
+    handleAuction() {
+      if (this.auctionCheckbox) {
+        if (this.postData.data.auction !== null) {
+          if (this.postData.data.auction.id !== null) {
+            this.auctionId = this.postData.data.auction.id;
+          } else {
+            this.auctionId = 0;
+          }
+        } else {
+          this.auctionId = 0;
+        }
+      } else {
+        if (this.postData.data.auction !== null) {
+          if (this.postData.data.auction.id !== null) {
+            this.auctionId = -1;
+          } else {
+            this.auctionId = -1;
+          }
+        } else {
+          this.auctionId = null;
+        }
       }
     },
     async getTypes() {
@@ -605,7 +679,7 @@ export default {
     },
     async getGenres() {
       try {
-         const response = await axios.get('/genres', {
+        const response = await axios.get('/genres', {
           headers: {
             'Authorization': 'Bearer ' + this.isAuthenticated
           }
