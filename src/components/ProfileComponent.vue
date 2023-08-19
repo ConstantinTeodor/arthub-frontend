@@ -11,6 +11,70 @@
       <v-tab :value="3">Auctions</v-tab>
     </v-tabs>
   </v-card>
+
+  <v-btn
+      width="300px"
+      v-if="status === 0"
+      class="positioning"
+      @click="addConnection"
+  >
+    Request connection
+  </v-btn>
+
+  <v-btn
+      width="300px"
+      v-if="status === 3"
+      class="positioning"
+      @click="removeConnection"
+  >
+    Remove request
+  </v-btn>
+
+  <v-btn
+      width="300px"
+      v-if="status === 1"
+      class="positioning-left"
+      @click="acceptConnection"
+  >
+    Accept connection request
+  </v-btn>
+
+  <v-btn
+      width="300px"
+      v-if="status === 1"
+      class="positioning-right"
+      @click="declineConnection"
+  >
+    Decline connection request
+  </v-btn>
+
+  <v-btn
+      width="300px"
+      v-if="status === 2"
+      class="positioning"
+      @click="removeConnection"
+  >
+    Remove connection
+  </v-btn>
+
+  <v-btn
+      width="400px"
+      v-if="status === 5"
+      class="positioning-denied"
+      @click="addConnection"
+  >
+    Request declined. Request connection
+  </v-btn>
+
+  <v-btn
+      width="300px"
+      v-if="status === 6"
+      class="positioning"
+      @click="removeConnection"
+  >
+    Remove request
+  </v-btn>
+
   <div v-if="!!clientData">
     <div v-for="post in clientData.data.posts" :key="post.id">
       <PostCard :id="post.id"></PostCard>
@@ -39,6 +103,7 @@ export default {
     tab: null,
     myAcc: false,
     clientData: null,
+    status: null,
   }),
   computed: {
     ...mapGetters(['isAuthenticated']),
@@ -64,9 +129,28 @@ export default {
         } else {
           this.myAcc = false;
         }
-        console.log(this.myAcc)
+
+        if (!this.myAcc) {
+          await this.fetchStatus();
+        }
       } catch (error) {
         console.error('Error fetching image:', error);
+      }
+    },
+    async fetchStatus() {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        const response = await axios.get('/connections/status/' + this.id, {
+          headers: {
+            'Authorization': 'Bearer ' + this.isAuthenticated
+          },
+        });
+
+        this.status = response.data.status;
+      } catch (error) {
+        console.error('Error fetching data:', error);
       }
     },
     async fetchData() {
@@ -92,11 +176,98 @@ export default {
       } else {
         return this.clientData.data.first_name + ' ' + this.clientData.data.middle_name + ' ' + this.clientData.data.last_name;
       }
-    }
+    },
+    async addConnection () {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        await axios.post('/connections', {
+              receiver_id: this.id,
+            },
+            {
+          headers: {
+            'Authorization': 'Bearer ' + this.isAuthenticated
+          },
+        });
+
+        this.status = 3;
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    },
+    async removeConnection () {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        await axios.delete('/connections/' + this.id, {
+              headers: {
+                'Authorization': 'Bearer ' + this.isAuthenticated
+              },
+            });
+
+        this.status = 0;
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    },
+    async acceptConnection() {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        await axios.put('/connections', {
+          receiver_id: this.id,
+          status: 'accepted',
+        }, {
+          headers: {
+            'Authorization': 'Bearer ' + this.isAuthenticated
+          },
+        });
+
+        this.status = 2;
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    },
+    async declineConnection() {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        await axios.put('/connections', {
+          receiver_id: this.id,
+          status: 'declined',
+        }, {
+          headers: {
+            'Authorization': 'Bearer ' + this.isAuthenticated
+          },
+        });
+
+        this.status = 5;
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    },
   }
 }
 </script>
 
 <style scoped>
-
+.positioning {
+  margin-left: calc(50% - 150px);
+  margin-right: calc(50% - 150px);
+}
+.positioning-left {
+  margin-left: calc(50% - 325px);
+  margin-right: 50px;
+}
+.positioning-right {
+  margin-right: calc(50% - 325px);
+}
+.positioning-denied {
+  margin-left: calc(50% - 200px);
+  margin-right: calc(50% - 200px);
+}
 </style>

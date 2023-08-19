@@ -85,7 +85,9 @@
           </v-form>
         </v-container>
         <v-container class="overflow-y-scroll" :style="{ height: '830px' }">
-
+          <div v-for="user in users" :key="user.id">
+            <ClientSearch :user="user" @closeOverlay="overlay = !overlay" />
+          </div>
         </v-container>
       </v-card>
     </div>
@@ -93,20 +95,26 @@
 </template>
 
 <script>
+import ClientSearch from "@/components/ClientSearch.vue";
 import { mapGetters } from 'vuex';
 import axios from 'axios';
+
 axios.defaults.baseURL = 'http://127.0.0.1:8000';
 axios.defaults.headers.common = {
   'X-Requested-With': 'XMLHttpRequest',
 };
 export default {
   name: "TopNavigationBar",
+  components: {
+    ClientSearch,
+  },
   data() {
     return {
       myId: null,
       isProfile: false,
-      overlay: true,
+      overlay: false,
       searchText: null,
+      users: null,
     }
   },
   computed: {
@@ -182,6 +190,22 @@ export default {
     checkout() {
       this.$router.push({ name: 'Checkout' });
     },
+    async search() {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        const response = await axios.get('/clients/search/' + this.searchText, {
+          headers: {
+            'Authorization': 'Bearer ' + this.isAuthenticated
+          }
+        });
+
+        this.users = response.data.data;
+      } catch (error) {
+        console.error('Error fetching image:', error);
+      }
+    }
   }
 }
 </script>
