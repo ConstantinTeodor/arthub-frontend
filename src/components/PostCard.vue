@@ -147,6 +147,11 @@ axios.defaults.headers.common = {
 };
 export default {
   name: "PostCard",
+  props: {
+    id: {
+      required: true,
+    },
+  },
   components: {
     CommentSection,
   },
@@ -173,7 +178,7 @@ export default {
         if (!this.isAuthenticated) {
           this.$router.push('/login');
         }
-        const response = await axios.get('/posts/2', {
+        const response = await axios.get('/posts/' + this.id, {
           headers: {
             'Authorization': 'Bearer ' + this.isAuthenticated
           },
@@ -189,7 +194,7 @@ export default {
         if (!this.isAuthenticated) {
           this.$router.push('/login');
         }
-        const response = await axios.get(`/artworks/images/2`, {
+        const response = await axios.get(`/artworks/images/` + this.id, {
           responseType: 'arraybuffer',
           headers: {
             'Authorization': 'Bearer ' + this.isAuthenticated
@@ -245,7 +250,7 @@ export default {
         if (!this.isAuthenticated) {
           this.$router.push('/login');
         }
-        const response = await axios.get(`/posts/liked/2`, {
+        const response = await axios.get(`/posts/liked/` + this.id, {
           headers: {
             'Authorization': 'Bearer ' + this.isAuthenticated
           },
@@ -259,7 +264,7 @@ export default {
       this.fetchData();
     },
     redirectEdit() {
-      this.$router.push('/editPost/2');
+      this.$router.push({ name: 'EditPost', params: { id: parseInt(this.id) } });
     },
   },
 }

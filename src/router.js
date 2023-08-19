@@ -7,6 +7,9 @@ import Register from './views/Register.vue';
 import RegisterClient from "@/views/RegisterClient.vue";
 import AddPost from "@/views/AddPost.vue";
 import EditPost from "@/views/EditPost.vue";
+import Profile from "@/views/Profile.vue";
+import Marketplace from "@/views/Marketplace.vue";
+import Checkout from "@/views/Checkout.vue";
 
 const routes = [
     {
@@ -43,6 +46,24 @@ const routes = [
         path: '/editPost/:id',
         name: 'EditPost',
         component: EditPost,
+    },
+
+    {
+        path: '/profile/:id',
+        name: 'Profile',
+        component: Profile,
+    },
+
+    {
+        path: '/marketplace',
+        name: 'Marketplace',
+        component: Marketplace,
+    },
+
+    {
+        path: '/checkout',
+        name: 'Checkout',
+        component: Checkout,
     }
 ];
 

@@ -2,20 +2,22 @@
   <v-app>
     <TopNavigationBar/>
     <v-main>
-      <PostCard :id="2"/>
+      <CartItems/>
+      <CartForm/>
     </v-main>
   </v-app>
 </template>
 
 <script>
 import TopNavigationBar from "@/components/TopNavigationBar.vue";
-import PostCard from "@/components/PostCard.vue";
-
+import CartItems from "@/components/CartItems.vue";
+import CartForm from "@/components/CartForm.vue";
 export default {
-  name: "HomePage",
+  name: "CheckOut",
   components: {
     TopNavigationBar,
-    PostCard,
+    CartItems,
+    CartForm,
   },
 }
 </script>

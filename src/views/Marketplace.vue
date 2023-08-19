@@ -2,20 +2,22 @@
   <v-app>
     <TopNavigationBar/>
     <v-main>
-      <PostCard :id="2"/>
+      <NewsList/>
+      <ArtworkList/>
     </v-main>
   </v-app>
 </template>
 
 <script>
 import TopNavigationBar from "@/components/TopNavigationBar.vue";
-import PostCard from "@/components/PostCard.vue";
-
+import NewsList from "@/components/NewsList.vue";
+import ArtworkList from "@/components/ArtworkList.vue";
 export default {
-  name: "HomePage",
+  name: "MarketPlace",
   components: {
     TopNavigationBar,
-    PostCard,
+    NewsList,
+    ArtworkList,
   },
 }
 </script>
