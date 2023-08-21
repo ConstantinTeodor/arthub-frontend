@@ -3,12 +3,14 @@
   <v-card v-if="myAcc">
     <v-tabs
         v-model="tab"
-        color="deep-purple-accent-4"
+        color="blue-darken-2"
         align-tabs="center"
     >
       <v-tab :value="1">Posts</v-tab>
-      <v-tab :value="2">Orders</v-tab>
-      <v-tab :value="3">Auctions</v-tab>
+      <v-tab :value="2">Auctions</v-tab>
+      <v-tab :value="3">Orders</v-tab>
+      <v-tab :value="4">Connections</v-tab>
+      <v-tab :value="5">Edit profile</v-tab>
     </v-tabs>
   </v-card>
 
@@ -75,9 +77,164 @@
     Remove request
   </v-btn>
 
-  <div v-if="!!clientData">
+  <div v-if="!!clientData && tab === 1">
     <div v-for="post in clientData.data.posts" :key="post.id">
       <PostCard :id="post.id"></PostCard>
+    </div>
+  </div>
+
+  <v-sheet v-if="!!clientData && tab === 2" class="mx-auto" elevation="8">
+    <v-slide-group
+        v-model="model"
+        class="pa-4"
+        selected-class="bg-primary"
+        mandatory
+        show-arrows
+    >
+      <v-slide-group-item
+          v-for="auction in auctions"
+          :key="auction.id"
+      >
+        <div>
+          <v-hover v-slot="{ isHovering, props }">
+            <v-card
+                class="ml-2 mr-2"
+                color="grey-lighten-4"
+                max-width="400"
+                v-bind="props"
+            >
+              <v-img
+                  :aspect-ratio="16/9"
+                  :cover="true"
+                  :src="getImageSrc(auction.image)"
+              >
+                <v-expand-transition>
+                  <div
+                      v-if="isHovering"
+                      class="d-flex transition-fast-in-fast-out bg-blue-darken-1 v-card--reveal text-h2"
+                      style="height: 100%;"
+                  >
+                    {{ 'Start bid: ' + auction.start_bid + '€' }}
+                  </div>
+                </v-expand-transition>
+              </v-img>
+
+              <v-card-text class="pt-6">
+                <div class="font-weight-light text-grey text-h6 mb-2">
+                  {{ 'For auction by ' + auction.listed_by_name + ' 🎨'}}
+                </div>
+
+                <h3 class="text-h5 text-grey-darken-4 mb-2">
+                  {{ 'Introducing: ' + auction.title }}
+                </h3>
+
+                <div class="text-grey text-h6 mb-2">
+                  {{ '👩‍🎨 Artist Spotlight: : ' + auction.artist }}
+                </div>
+
+                <v-btn
+                    class="text-grey-darken-4 mt-3"
+                    prepend-icon="text-grey-darken-4 mdi-gavel"
+                    variant="tonal"
+                    width="400"
+                    @click="goToAuction(auction.id)"
+                >
+                  Go to auction page
+                </v-btn>
+              </v-card-text>
+            </v-card>
+          </v-hover>
+        </div>
+      </v-slide-group-item>
+    </v-slide-group>
+  </v-sheet>
+
+  <div v-if="!!clientData && tab === 3">
+    <div v-for="order in orders" :key="order.id">
+      <v-card
+          class="mx-auto mt-3"
+          width="800"
+      >
+        <v-card-title>
+          Order id: {{ order.id }}
+        </v-card-title>
+
+        <v-card-subtitle>
+          Final amount: {{ order.final_amount }}€
+        </v-card-subtitle>
+
+        <v-card-text>
+          <div>Payment: {{ order.payment }}</div>
+
+          <div>Address: {{ order.address }}</div>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-btn
+              color="orange-lighten-2"
+              variant="text"
+              @click="show = !show"
+          >
+            See order items
+          </v-btn>
+
+          <v-spacer></v-spacer>
+
+          <v-btn
+              :icon="show ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+              @click="show = !show"
+          ></v-btn>
+        </v-card-actions>
+
+        <v-expand-transition>
+          <div v-show="show">
+            <v-divider></v-divider>
+
+            <v-sheet
+                  class="mx-auto"
+                  elevation="8"
+                  max-width="800"
+              >
+                <v-slide-group
+                    v-model="model"
+                    class="pa-4"
+                    selected-class="bg-success"
+                    show-arrows
+                >
+                  <v-slide-group-item
+                      v-for="artwork in order.artworks"
+                      :key="artwork.id"
+                  >
+                    <v-card
+                        color="grey-lighten-1"
+                        :class="'ma-4'"
+                        height="400"
+                        width="200"
+                    >
+                      <v-img
+                          :aspect-ratio="16/9"
+                          :cover="true"
+                          :src="getImageSrc(artwork.image)"
+                      > </v-img>
+                      <v-card-title>
+                        {{ artwork.artwork.title }}
+                      </v-card-title>
+                      <v-card-subtitle>
+                        {{ artwork.artwork.artist }}
+                      </v-card-subtitle>
+                      <v-card-text>
+                        Quantity: {{ artwork.quantity }}
+                      </v-card-text>
+                      <v-card-text>
+                        Total: {{ artwork.total }}€
+                      </v-card-text>
+                    </v-card>
+                  </v-slide-group-item>
+                </v-slide-group>
+              </v-sheet>
+          </div>
+        </v-expand-transition>
+      </v-card>
     </div>
   </div>
 </template>
@@ -104,6 +261,12 @@ export default {
     myAcc: false,
     clientData: null,
     status: null,
+    auctions: null,
+    images: {},
+    model: null,
+    show: false,
+    orders: null,
+    orderImages: {},
   }),
   computed: {
     ...mapGetters(['isAuthenticated']),
@@ -111,6 +274,8 @@ export default {
   mounted() {
     this.myAccount();
     this.fetchData();
+    this.fetchDataAuction();
+    this.fetchDataOrders();
 
     setInterval(() => {
       if (window.location.pathname.includes('/profile')) {
@@ -256,6 +421,73 @@ export default {
         console.error('Error fetching data:', error);
       }
     },
+    async fetchDataAuction() {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        const response = await axios.get('/auctions', {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+            });
+
+        this.auctions = response.data.data;
+
+        this.auctions.forEach(auction => {
+          this.fetchImage(auction.image);
+        });
+
+      } catch (error) {
+        console.error('Error fetching image:', error);
+      }
+    },
+    async fetchImage(id) {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        const response = await axios.get(`/artworks/images/` + id, {
+          responseType: 'arraybuffer',
+          headers: {
+            'Authorization': 'Bearer ' + this.isAuthenticated
+          },
+        });
+        const blob = new Blob([response.data], { type: response.headers['content-type'] });
+        this.images[id] = URL.createObjectURL(blob);
+      } catch (error) {
+        console.error('Error fetching image:', error);
+      }
+    },
+    getImageSrc(id) {
+      if (this.images && this.images[id]) {
+        return this.images[id];
+      }
+    },
+    goToAuction(auction_id) {
+      this.$router.push({ name: 'AuctionPage', params: { id: parseInt(auction_id) } });
+    },
+    async fetchDataOrders() {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        const response = await axios.get('/orders', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+
+        this.orders = response.data.data;
+        this.orders.forEach(order => {
+          order.artworks.forEach(item => {
+            this.fetchImage(item.image);
+          });
+        });
+      } catch (error) {
+        console.error('Error fetching image:', error);
+      }
+    },
   }
 }
 </script>
@@ -275,5 +507,13 @@ export default {
 .positioning-denied {
   margin-left: calc(50% - 200px);
   margin-right: calc(50% - 200px);
+}
+.v-card--reveal {
+  align-items: center;
+  bottom: 0;
+  justify-content: center;
+  opacity: 0.9;
+  position: absolute;
+  width: 100%;
 }
 </style>

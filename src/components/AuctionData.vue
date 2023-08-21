@@ -53,7 +53,7 @@
           :rules="numberRuleInteger"
       ></v-text-field>
 
-      <v-card class="mb-12 mt-3" color="surface-variant" variant="tonal">
+      <v-card v-if="auction.started || auction.participating === 'true'" class="mb-12 mt-3" color="surface-variant" variant="tonal">
         <v-card-text
             class="text-medium-emphasis">
           <span> Your maximum bid: €{{ this.available_sum }}. </span>
