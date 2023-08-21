@@ -111,6 +111,12 @@ export default {
   mounted() {
     this.myAccount();
     this.fetchData();
+
+    setInterval(() => {
+      if (window.location.pathname.includes('/profile')) {
+        this.fetchData();
+      }
+    }, 2000);
   },
   methods: {
     async myAccount() {

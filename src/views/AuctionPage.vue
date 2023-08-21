@@ -2,38 +2,39 @@
   <v-app>
     <TopNavigationBar/>
     <v-main>
-      <ProfileComponent :id="parseInt(clientId)"/>
+      <AuctionData :auction_id="parseInt(auctionId)"/>
     </v-main>
   </v-app>
 </template>
 
 <script>
 import TopNavigationBar from "@/components/TopNavigationBar.vue";
-import ProfileComponent from "@/components/ProfileComponent.vue";
-import { useRouter } from "vue-router";
+import AuctionData from "@/components/AuctionData.vue";
+import {useRouter} from "vue-router";
 
 export default {
-  name: "ProfilePage",
+  name: "AuctionPage",
   components: {
-    ProfileComponent,
     TopNavigationBar,
+    AuctionData
   },
   setup() {
     const router = useRouter();
 
-    const clientId = router.currentRoute.value.params.id;
+    const auctionId = router.currentRoute.value.params.id;
 
     return {
-      clientId
+      auctionId
     };
   },
   watch: {
     '$route': function () {
-        window.location.reload();
+      window.location.reload();
     }
   },
 }
 </script>
 
 <style scoped>
+
 </style>

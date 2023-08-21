@@ -212,7 +212,7 @@ export default {
           this.$router.push('/login');
         }
         await axios.post('/posts/like', {
-          'post_id': 2,
+          'post_id': this.id,
         }, {
           headers: {
             'Authorization': 'Bearer ' + this.isAuthenticated
@@ -231,7 +231,7 @@ export default {
           this.$router.push('/login');
         }
         await axios.post('/posts/comment', {
-          'post_id': 2,
+          'post_id': this.id,
           'comment': this.commentData,
         }, {
           headers: {

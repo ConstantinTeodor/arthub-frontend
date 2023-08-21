@@ -10,6 +10,7 @@ import EditPost from "@/views/EditPost.vue";
 import Profile from "@/views/Profile.vue";
 import Marketplace from "@/views/Marketplace.vue";
 import Checkout from "@/views/Checkout.vue";
+import AuctionPage from "@/views/AuctionPage.vue";
 
 const routes = [
     {
@@ -64,6 +65,12 @@ const routes = [
         path: '/checkout',
         name: 'Checkout',
         component: Checkout,
+    },
+
+    {
+        path: '/auction/:id',
+        name: 'AuctionPage',
+        component: AuctionPage,
     }
 ];
 
