@@ -237,10 +237,138 @@
       </v-card>
     </div>
   </div>
+
+  <div v-if="!!clientData && tab === 4">
+    <v-card class="mx-auto mt-3" max-width="300">
+      <v-list density="compact">
+        <v-list-subheader>{{clientData.data.username}} connections</v-list-subheader>
+
+        <v-list-item
+            class="mt-2"
+            v-for="connection in connections"
+            :key="connection.id"
+            color="primary"
+            @click="goToConnection(connection.client_id)"
+        >
+
+          <v-list-item-title>
+            <v-avatar
+                color="grey-darken-3"
+                image="https://avataaars.io/?avatarStyle=Transparent&topType=ShortHairShortCurly&accessoriesType=Prescription02&hairColor=Black&facialHairType=Blank&clotheType=Hoodie&clotheColor=White&eyeType=Default&eyebrowType=DefaultNatural&mouthType=Default&skinColor=Light"
+            ></v-avatar>
+            <span class="ml-2"> {{ connection.client_name }} </span>
+          </v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-card>
+  </div>
+  <div v-if="!!clientData && tab === 5">
+    <v-container>
+      <v-text-field
+          v-model="username"
+          color="primary"
+          prepend-inner-icon="mdi-account-outline"
+          label="Username"
+          variant="underlined"
+      ></v-text-field>
+
+      <v-text-field
+          v-model="email"
+          color="primary"
+          prepend-inner-icon="mdi-email-outline"
+          label="E-mail"
+          variant="underlined"
+      ></v-text-field>
+
+      <v-text-field
+          v-model="phone"
+          color="primary"
+          prepend-inner-icon="mdi-phone-outline"
+          label="Phone number"
+          variant="underlined"
+      ></v-text-field>
+      <v-text-field
+          v-model="first_name"
+          color="primary"
+          prepend-inner-icon="mdi-account-outline"
+          label="First name"
+          variant="underlined"
+      ></v-text-field>
+
+      <v-text-field
+          v-model="last_name"
+          color="primary"
+          prepend-inner-icon="mdi-account-circle-outline"
+          label="Last name"
+          variant="underlined"
+      ></v-text-field>
+
+      <v-text-field
+          v-model="middle_name"
+          color="primary"
+          prepend-inner-icon="mdi-account-box-outline"
+          label="Middle name (optional)"
+          variant="underlined"
+      ></v-text-field>
+
+      <v-text-field
+          v-model="date_of_birth"
+          color="primary"
+          label="Date of birth"
+          variant="underlined"
+          prepend-inner-icon="mdi-calendar"
+          @click:prepend-inner="$refs.datePicker.openMenu()"
+      ></v-text-field>
+
+      <v-text-field
+          v-model="password"
+          :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
+          :type="visible ? 'text' : 'password'"
+          color="primary"
+          prepend-inner-icon="mdi-lock-outline"
+          label="New password"
+          variant="underlined"
+          @click:append-inner="visible = !visible"
+      ></v-text-field>
+
+      <v-text-field
+          v-model="confirmPassword"
+          :append-inner-icon="visible2 ? 'mdi-eye-off' : 'mdi-eye'"
+          :type="visible2 ? 'text' : 'password'"
+          color="primary"
+          prepend-inner-icon="mdi-lock-outline"
+          label="Confirm new password"
+          variant="underlined"
+          @click:append-inner="visible2 = !visible2"
+      ></v-text-field>
+
+      <v-card v-if="!!errors" class="mb-12" color="surface-variant" variant="tonal">
+        <v-card-text
+            class="text-medium-emphasis text-caption">
+          <span v-html="errors"></span>
+        </v-card-text>
+      </v-card>
+
+      <v-btn color="blue-darken-2" @click="updateClient">
+        Save profile data
+
+        <v-icon icon="mdi-chevron-right" end></v-icon>
+      </v-btn>
+    </v-container>
+  </div>
+  <VueDatePicker
+      ref="datePicker"
+      v-model="rawDateOfBirth"
+      :teleport-center="true"
+      :dark="true"
+      class="picker"
+      format="dd-MM-yyyy"
+  ></VueDatePicker>
 </template>
 
 <script>
 import PostCard from "@/components/PostCard.vue";
+import VueDatePicker from '@vuepic/vue-datepicker';
 import ProfileDetails from "@/components/ProfileDetails.vue";
 import {mapGetters} from "vuex";
 import axios from "axios";
@@ -255,6 +383,7 @@ export default {
   components: {
     PostCard,
     ProfileDetails,
+    VueDatePicker,
   },
   data: () => ({
     tab: null,
@@ -267,21 +396,56 @@ export default {
     show: false,
     orders: null,
     orderImages: {},
+    connections: null,
+    first_name: null,
+    last_name: null,
+    middle_name: null,
+    errors: null,
+    rawDateOfBirth: null,
+    date_of_birth: null,
+    password: null,
+    confirmPassword: null,
+    username: null,
+    email: null,
+    phone: null,
   }),
   computed: {
     ...mapGetters(['isAuthenticated']),
+
+    formattedDateOfBirth() {
+      if (!this.rawDateOfBirth) return null;
+      const date = new Date(this.rawDateOfBirth);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+
+      return `${day}-${month}-${year}`;
+    }
   },
   mounted() {
     this.myAccount();
     this.fetchData();
     this.fetchDataAuction();
     this.fetchDataOrders();
+    this.fetchDataConnections();
 
     setInterval(() => {
       if (window.location.pathname.includes('/profile')) {
         this.fetchData();
       }
-    }, 2000);
+    }, 10000);
+  },
+  watch: {
+    rawDateOfBirth() {
+      this.date_of_birth = this.formattedDateOfBirth;
+    },
+    date_of_birth(newValue) {
+      const parts = newValue.split('-');
+      if (parts.length === 3) {
+        const [day, month, year] = parts;
+        this.rawDateOfBirth = new Date(`${year}-${month}-${day}`);
+      }
+    }
   },
   methods: {
     async myAccount() {
@@ -336,7 +500,16 @@ export default {
         });
 
         this.clientData = response.data;
-        console.log(this.clientData);
+
+        if (this.clientData.data.me) {
+          this.first_name = this.clientData.data.first_name;
+          this.last_name = this.clientData.data.last_name;
+          this.middle_name = this.clientData.data.middle_name;
+          this.username = this.clientData.data.username;
+          this.email = this.clientData.data.email;
+          this.phone = this.clientData.data.phone;
+          this.date_of_birth = this.clientData.data.date_of_birth;
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -488,6 +661,51 @@ export default {
         console.error('Error fetching image:', error);
       }
     },
+    async fetchDataConnections() {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        const response = await axios.get('/connections', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        this.connections = response.data.data;
+      } catch (error) {
+        console.error('Error fetching image:', error);
+      }
+    },
+    goToConnection(id) {
+      this.$router.push({ name: 'Profile', params: { id: parseInt(id) } });
+    },
+    async updateClient() {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        await axios.put('/clients', {
+          first_name: this.first_name,
+          middle_name: this.middle_name,
+          last_name: this.last_name,
+          date_of_birth: this.date_of_birth,
+          username: this.username,
+          email: this.email,
+          phone: this.phone,
+          password: this.password,
+          password_confirmation: this.confirmPassword,
+        },
+            {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+
+        window.location.reload();
+      } catch (error) {
+        console.error('Error fetching image:', error);
+      }
+    },
   }
 }
 </script>
@@ -515,5 +733,11 @@ export default {
   opacity: 0.9;
   position: absolute;
   width: 100%;
+}
+.picker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 999;
 }
 </style>
