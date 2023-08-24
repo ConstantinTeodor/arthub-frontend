@@ -6,6 +6,20 @@
       theme="dark"
       width="600"
   >
+    <v-alert
+        v-if="deleteMessage"
+        type="warning"
+        :prominent="true"
+        border="top"
+        variant="outlined"
+    >
+      Are you sure you want to delete this post?
+      <template v-slot:append>
+        <v-icon class="mt-2" @click="deletePost">mdi-check</v-icon>
+        <v-icon class="mt-2 ml-2" @click="deleteMessage = !deleteMessage">mdi-close</v-icon>
+      </template>
+    </v-alert>
+
     <v-list-item class="mt-4">
       <template v-slot:prepend>
         <v-avatar
@@ -26,6 +40,7 @@
           <v-list>
             <v-list-item>
               <v-list-item-title @click="redirectEdit">Edit</v-list-item-title>
+              <v-list-item-title class="mt-2" @click="deleteMessage = !deleteMessage">Delete</v-list-item-title>
             </v-list-item>
           </v-list>
         </v-menu>
@@ -162,6 +177,7 @@ export default {
       overlay: false,
       commentData: '',
       iLiked: false,
+      deleteMessage: false,
     };
   },
   computed: {
@@ -266,6 +282,21 @@ export default {
     redirectEdit() {
       this.$router.push({ name: 'EditPost', params: { id: parseInt(this.id) } });
     },
+    async deletePost() {
+      try {
+        if (!this.isAuthenticated) {
+          this.$router.push('/login');
+        }
+        await axios.delete(`/posts/` + this.id, {
+          headers: {
+            'Authorization': 'Bearer ' + this.isAuthenticated
+          },
+        });
+        window.location.reload();
+      } catch (error) {
+        console.error('Error fetching image:', error);
+      }
+    }
   },
 }
 </script>

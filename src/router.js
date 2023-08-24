@@ -11,6 +11,8 @@ import Profile from "@/views/Profile.vue";
 import Marketplace from "@/views/Marketplace.vue";
 import Checkout from "@/views/Checkout.vue";
 import AuctionPage from "@/views/AuctionPage.vue";
+import PasswordRecovery from "@/views/PasswordRecovery.vue";
+import ConversationPage from "@/views/ConversationPage.vue";
 
 const routes = [
     {
@@ -71,6 +73,18 @@ const routes = [
         path: '/auction/:id',
         name: 'AuctionPage',
         component: AuctionPage,
+    },
+
+    {
+        path: '/password-recovery',
+        name: 'PasswordRecovery',
+        component: PasswordRecovery,
+    },
+
+    {
+        path: '/conversations',
+        name: 'Conversations',
+        component: ConversationPage,
     }
 ];
 

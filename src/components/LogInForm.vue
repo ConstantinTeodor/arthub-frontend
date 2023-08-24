@@ -44,7 +44,7 @@
       <v-card-text class="text-center">
         <a
             class="text-white text-decoration-none"
-            href="#"
+            @click="redirectReset"
             rel="noopener noreferrer"
             target="_blank"
         >
@@ -112,6 +112,9 @@ export default {
     },
     redirectRegister() {
       this.$router.push({ name: 'Register' });
+    },
+    redirectReset() {
+      this.$router.push({ name: 'PasswordRecovery' });
     },
   }
 }

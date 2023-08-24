@@ -49,6 +49,8 @@
 
       <v-btn icon="mdi-cart" @click="checkout"></v-btn>
 
+      <v-btn v-if="!!isAuthenticated" icon="mdi-message" @click="chat"></v-btn>
+
       <v-btn v-if="!!isAuthenticated" icon="mdi-account" @click="profile"></v-btn>
 
       <v-btn v-if="!!isAuthenticated" icon="mdi-logout" @click="logout"></v-btn>
@@ -275,7 +277,7 @@ export default {
     async fetchNotifications() {
       try {
         if (!this.isAuthenticated) {
-          this.$router.push('/login');
+          return;
         }
         const response = await axios.get('/notifications', {
           headers: {
@@ -322,6 +324,9 @@ export default {
       } catch (error) {
         console.error('Error fetching image:', error);
       }
+    },
+    chat() {
+      this.$router.push({ name: 'Conversations' });
     },
   }
 }
