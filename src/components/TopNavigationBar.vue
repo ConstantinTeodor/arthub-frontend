@@ -2,7 +2,7 @@
   <v-app-bar
       v-if="!isProfile"
       scroll-behavior="hide"
-      scroll-threshold="100"
+      scroll-threshold="50"
       :elevation="0"
       color="rgba(20, 20, 20, 1)"
       :height="200">
@@ -17,7 +17,7 @@
   <v-app-bar
       v-else
       scroll-behavior="hide"
-      scroll-threshold="100"
+      scroll-threshold="50"
       :elevation="0"
       color="rgba(20, 20, 20, 1)"
       :height="0">

@@ -77,7 +77,7 @@
     Remove request
   </v-btn>
 
-  <div v-if="!!clientData && tab === 1">
+  <div v-if="!!clientData && (tab === 1 || !myAcc)">
     <div v-for="post in clientData.data.posts" :key="post.id">
       <PostCard :id="post.id"></PostCard>
     </div>
